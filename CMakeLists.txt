@@ -54,6 +54,7 @@ ADD_LIBRARY(dqrobotics SHARED
     src/robot_modeling/DQ_SerialManipulatorDenso.cpp
     src/robot_modeling/DQ_MobileBase.cpp
     src/robot_modeling/DQ_HolonomicBase.cpp
+    src/robot_modeling/DQ_FreeFloatingBase.cpp
     src/robot_modeling/DQ_DifferentialDriveRobot.cpp
     src/robot_modeling/DQ_WholeBody.cpp
     src/robot_modeling/DQ_SerialWholeBody.cpp
@@ -108,6 +109,7 @@ INSTALL(FILES
     include/dqrobotics/robot_modeling/DQ_SerialManipulatorDenso.h
     include/dqrobotics/robot_modeling/DQ_MobileBase.h
     include/dqrobotics/robot_modeling/DQ_HolonomicBase.h
+    include/dqrobotics/robot_modeling/DQ_FreeFloatingBase.h
     include/dqrobotics/robot_modeling/DQ_DifferentialDriveRobot.h
     include/dqrobotics/robot_modeling/DQ_WholeBody.h
     include/dqrobotics/robot_modeling/DQ_SerialWholeBody.h
