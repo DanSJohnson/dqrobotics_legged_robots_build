@@ -38,12 +38,12 @@ DQ_FreeFloatingBase::DQ_FreeFloatingBase()
 
 DQ DQ_FreeFloatingBase::raw_fkm(const VectorXd& q) const //Reworked to take x,y,z coordinates and rpy euler angles.
 {
-    const double& x     = q(0);
-    const double& y     = q(1);
-    const double& z     = q(2);
-    const double& roll  = q(3);
-    const double& pitch = q(4);
-    const double& yaw   = q(5);
+    const double& roll  = q(0);
+    const double& pitch = q(1);
+    const double& yaw   = q(2);
+    const double& x     = q(3);
+    const double& y     = q(4);
+    const double& z     = q(5);
 
     DQ rx, ry, rz, r, t, pose;
     rx = cos(roll/2) + i_*sin(roll/2);
@@ -86,12 +86,12 @@ MatrixXd DQ_FreeFloatingBase::raw_pose_jacobian(const VectorXd& q, const int& to
     }
 
     // Extract values from configuration velocity
-    const double& x     = q(0);
-    const double& y     = q(1);
-    const double& z     = q(2);
-    const double& roll  = q(3);
-    const double& pitch = q(4);
-    const double& yaw   = q(5);
+    const double& roll  = q(0);
+    const double& pitch = q(1);
+    const double& yaw   = q(2);
+    const double& x     = q(3);
+    const double& y     = q(4);
+    const double& z     = q(5);
 
     // Shorthands for sine and cosine of angles
     const double cr = cos(roll/2.0);

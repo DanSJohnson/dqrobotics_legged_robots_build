@@ -58,6 +58,7 @@ ADD_LIBRARY(dqrobotics SHARED
     src/robot_modeling/DQ_DifferentialDriveRobot.cpp
     src/robot_modeling/DQ_WholeBody.cpp
     src/robot_modeling/DQ_SerialWholeBody.cpp
+    src/robot_modeling/DQ_LeggedRobot.cpp
 
     src/robot_control/DQ_KinematicController.cpp
     src/robot_control/DQ_PseudoinverseController.cpp
@@ -71,6 +72,7 @@ ADD_LIBRARY(dqrobotics SHARED
     src/robots/ComauSmartSixRobot.cpp
     src/robots/KukaLw4Robot.cpp
     src/robots/KukaYoubotRobot.cpp
+    src/robots/CorinHexapod.cpp
     src/robots/FrankaEmikaPandaRobot.cpp
     )
 
@@ -113,6 +115,7 @@ INSTALL(FILES
     include/dqrobotics/robot_modeling/DQ_DifferentialDriveRobot.h
     include/dqrobotics/robot_modeling/DQ_WholeBody.h
     include/dqrobotics/robot_modeling/DQ_SerialWholeBody.h
+    include/dqrobotics/robot_modeling/DQ_LeggedRobot.h
     DESTINATION "include/dqrobotics/robot_modeling")
 
 # robot_control headers
@@ -133,6 +136,7 @@ INSTALL(FILES
     include/dqrobotics/robots/KukaLw4Robot.h
     include/dqrobotics/robots/KukaYoubotRobot.h
     include/dqrobotics/robots/FrankaEmikaPandaRobot.h
+    include/dqrobotics/robots/CorinHexapod.h
     DESTINATION "include/dqrobotics/robots")
 
 # solvers headers
@@ -183,6 +187,7 @@ INSTALL(FILES
     src/robot_modeling/DQ_DifferentialDriveRobot.cpp
     src/robot_modeling/DQ_WholeBody.cpp
     src/robot_modeling/DQ_SerialWholeBody.cpp
+    src/robot_modeling/DQ_LeggedRobot.cpp
     DESTINATION "src/dqrobotics/robot_modeling")
 
 # robots folder
@@ -192,5 +197,6 @@ INSTALL(FILES
     src/robots/ComauSmartSixRobot.cpp
     src/robots/KukaLw4Robot.cpp
     src/robots/KukaYoubotRobot.cpp
+    src/robots/CorinHexapod.cpp
     src/robots/FrankaEmikaPandaRobot.cpp
     DESTINATION "src/dqrobotics/robots")
