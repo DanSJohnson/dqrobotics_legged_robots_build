@@ -644,7 +644,7 @@ MatrixXd DQ_Kinematics::line_to_line_distance_jacobian(const MatrixXd& line_jaco
     //Cross product Jacobian
     const MatrixXd Jcross        = 0.5*(haminus8(l_dq)-hamiplus8(l_dq))*line_jacobian;
     const MatrixXd Jcrossprimary = Jcross.block(0,0,4,DOFS);
-    const MatrixXd Jcrossdual    = Jcross.block(5,8,4,DOFS);
+    const MatrixXd Jcrossdual    = Jcross.block(4,0,4,DOFS);
     //Norm Jacobian
     const DQ Plzlcross                = P(cross(robot_line,l_dq));
     const DQ Dlzlcross                = D(cross(robot_line,l_dq));
@@ -833,10 +833,10 @@ MatrixXd DQ_Kinematics::line_segment_to_line_segment_distance_jacobian(const Mat
 {
     if(!DQ_Geometry::is_line_segment(robot_line,robot_point_1,robot_point_2))
         throw std::runtime_error("DQ_Kinematics::line_segment_to_line_segment_distance_jacobian::Input line_1, line_1_point_1, "
-                                 "and line_1_point_2 must contitute a valid line segment.");
+                                 "and line_1_point_2 must constitute a valid line segment.");
     if(!DQ_Geometry::is_line_segment(workspace_line,workspace_point_1,workspace_point_2))
         throw std::runtime_error("DQ_Kinematics::line_segment_to_line_segment_distance_jacobian::Input line_2, line_2_point_1, "
-                                 "and line_2_point_2 must contitute a valid line segment");
+                                 "and line_2_point_2 must constitute a valid line segment");
 
     const DQ& l1 = P(robot_line);
     const DQ& l2 = P(workspace_line);
