@@ -24,6 +24,27 @@ Contributors:
 #include<dqrobotics/utils/DQ_Constants.h>
 #include<dqrobotics/internal/_dq_linesegment.h>
 
+#include <execinfo.h>
+#include <iostream>
+
+void printStackTrace() {
+    const int max_frames = 64;
+    void* stack_frames[max_frames];
+    int frame_count = backtrace(stack_frames, max_frames);
+    char** symbols = backtrace_symbols(stack_frames, frame_count);
+    if (symbols == nullptr) {
+        std::cerr << "Failed to obtain backtrace symbols" << std::endl;
+        return;
+    }
+
+    std::cerr << "Stack trace:" << std::endl;
+    for (int i = 0; i < frame_count; ++i) {
+        std::cerr << symbols[i] << std::endl;
+    }
+    free(symbols);
+}
+
+
 namespace DQ_robotics
 {
 
@@ -40,10 +61,14 @@ double DQ_Geometry::point_to_point_squared_distance(const DQ& point1, const DQ& 
 {
     if(! is_pure_quaternion(point1))
     {
+        std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point1 = "<<point1<<std::endl;
+        printStackTrace();
         throw std::range_error("Input point1 is ! a pure quaternion.");
     }
     if(! is_pure_quaternion(point2))
     {
+        std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point2 = "<<point2<<std::endl;
+        printStackTrace();
         throw std::range_error("Input point2 is ! a pure quaternion.");
     }
 
