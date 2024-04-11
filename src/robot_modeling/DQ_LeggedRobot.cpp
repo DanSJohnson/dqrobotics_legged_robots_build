@@ -173,6 +173,13 @@ namespace DQ_robotics
         return reference_frame_ * raw_fkm_by_body(q, to_ith_body, bodies_[to_ith_body]->get_dim_configuration_space() - 1);
     }
 
+    VectorXd DQ_LeggedRobot::foot_position_as_vector(const VectorXd &q, const int &to_ith_body) const
+    {
+        DQ normal_result= fkm_by_body(q, to_ith_body);
+        DQ result_translation=translation(normal_result);
+        return (vec3(result_translation));
+    }
+
     std::vector<DQ> DQ_LeggedRobot::fkm_all_feet(const VectorXd &q) const
     {
         std::vector<DQ> poses;

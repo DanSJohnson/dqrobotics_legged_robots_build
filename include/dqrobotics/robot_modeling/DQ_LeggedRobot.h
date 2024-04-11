@@ -70,6 +70,7 @@ namespace DQ_robotics
         DQ fkm_by_body(const VectorXd &q, const int &to_ith_body) const;
         DQ fkm_by_body(const VectorXd &q, const int &to_ith_body, const int &to_jth_dof) const;
         DQ raw_fkm_by_body(const VectorXd &q, const int &to_ith_body, const int &to_jth_dof) const;
+        VectorXd foot_position_as_vector(const VectorXd &q, const int &to_ith_body) const;
 
         std::vector<MatrixXd> pose_jacobian_all_feet(const VectorXd &q) const;
         MatrixXd pose_jacobian_by_body(const VectorXd &q, const int &to_ith_body) const;
