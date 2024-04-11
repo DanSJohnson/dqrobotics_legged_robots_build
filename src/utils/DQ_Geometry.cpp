@@ -33,13 +33,13 @@ void printStackTrace() {
     int frame_count = backtrace(stack_frames, max_frames);
     char** symbols = backtrace_symbols(stack_frames, frame_count);
     if (symbols == nullptr) {
-        std::cerr << "Failed to obtain backtrace symbols" << std::endl;
+        std::cout << "Failed to obtain backtrace symbols" << std::endl;
         return;
     }
 
-    std::cerr << "Stack trace:" << std::endl;
+    std::cout << "printStackTrace EXECUTING!\n    Stack trace:" << std::endl;
     for (int i = 0; i < frame_count; ++i) {
-        std::cerr << symbols[i] << std::endl;
+        std::cout << symbols[i] << std::endl;
     }
     free(symbols);
 }
@@ -59,20 +59,34 @@ namespace DQ_robotics
  */
 double DQ_Geometry::point_to_point_squared_distance(const DQ& point1, const DQ& point2)
 {
+    DQ point_a=point1;
+    DQ point_b=point2;
     if(! is_pure_quaternion(point1))
     {
-        std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point1 = "<<point1<<std::endl;
-        printStackTrace();
-        throw std::range_error("Input point1 is ! a pure quaternion.");
+        VectorXd vector_form=vec4(point1);
+        if(vector_form[0]>-1e-9 && vector_form[0]<1e-9){
+            point_a=vector_form[1]*i_+vector_form[2]*j_+vector_form[3]*k_;
+        }
+        else{
+            std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point1 = "<<point1<<std::endl;
+            printStackTrace();
+            throw std::range_error("Input point1 is ! a pure quaternion.");
+        }
     }
     if(! is_pure_quaternion(point2))
     {
-        std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point2 = "<<point2<<std::endl;
-        printStackTrace();
-        throw std::range_error("Input point2 is ! a pure quaternion.");
+        VectorXd vector_form=vec4(point2);
+        if(vector_form[0]>-1e-9 && vector_form[0]<1e-9){
+            point_b=vector_form[1]*i_+vector_form[2]*j_+vector_form[3]*k_;
+        }
+        else{
+            std::cout<<"DQ_Geometry::point_to_point_squared_distance PROBLEM! point2 = "<<point2<<std::endl;
+            printStackTrace();
+            throw std::range_error("Input point1 is ! a pure quaternion.");
+        }
     }
 
-    const Vector4d a = vec4(point1-point2);
+    const Vector4d a = vec4(point_a-point_b);
     return a.transpose()*a;
 }
 
