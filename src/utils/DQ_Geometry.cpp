@@ -237,8 +237,13 @@ std::tuple<DQ, DQ> DQ_Geometry::closest_points_between_lines(const DQ &line1, co
     const DQ& m2 = D(line2);
     const DQ& l2 = P(line2);
 
-    const DQ& p1 = (cross(-1.0*m1,cross(l2,cross(l1,l2))) + dot(m2,cross(l1,l2) )*l1 )*std::pow(1./vec4(cross(l1,l2)).norm(),2);
-    const DQ& p2 = (cross( m2,cross(l1,cross(l1,l2))) - dot(m1,cross(l1,l2) )*l2 )*std::pow(1./vec4(cross(l1,l2)).norm(),2);
+    DQ p1 = (cross(-1.0*m1,cross(l2,cross(l1,l2))) + dot(m2,cross(l1,l2) )*l1 )*std::pow(1./vec4(cross(l1,l2)).norm(),2);
+    DQ p2 = (cross( m2,cross(l1,cross(l1,l2))) - dot(m1,cross(l1,l2) )*l2 )*std::pow(1./vec4(cross(l1,l2)).norm(),2);
+
+    // Ensure that p1 and p2 are pure quaternions before returning them
+    // (floating point errors can sometimes result in a non-zero real part)
+    p1=p1-Re(p1);
+    p2=p2-Re(p2);
 
     return {p1,p2};
 }

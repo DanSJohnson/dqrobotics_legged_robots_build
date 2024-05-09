@@ -289,16 +289,19 @@ namespace DQ_robotics
 
             const VectorXd q_iplus1 = q.segment(skipped_dofs, dim);
             MatrixXd leg_J = hamiplus8(raw_fkm_by_body(q, 0, 5) * base_frame_offsets_[to_ith_body]) * haminus8(x_iplus1_to_n) * bodies_[to_ith_body]->pose_jacobian(q_iplus1, to_jth_dof);
+            // MatrixXd leg_J = hamiplus8(raw_fkm_by_body(q, 0, 5) * base_frame_offsets_[to_ith_body]) * bodies_[to_ith_body]->pose_jacobian(q_iplus1, to_jth_dof);
+
 
             for (int j = 0; j < leg_J.cols(); j++)
             {
                 J_pose.col(6 + blank_cols_before + j) = leg_J.col(j);
             }
 
-            double blank_cols_after = get_dim_configuration_space() - (6 + blank_cols_before + bodies_[to_ith_body]->get_dim_configuration_space());
+            // double blank_cols_after = get_dim_configuration_space() - (6 + blank_cols_before + bodies_[to_ith_body]->get_dim_configuration_space());
+            double blank_cols_after = get_dim_configuration_space() - (6 + blank_cols_before + leg_J.cols());
             for (int j = 0; j < blank_cols_after; j++)
             {
-                J_pose.col(6 + blank_cols_before + dim + j) = blank_column;
+                J_pose.col(6 + blank_cols_before + leg_J.cols() + j) = blank_column;
             }
         }
         else
