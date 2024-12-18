@@ -1,23 +1,30 @@
 /**
-(C) Copyright 2020-2022 DQ Robotics Developers
+    This file is not (currently) part of the official release or development branches of DQ Robotics.
+    This file incorporates elements of the official releases, but was written by Daniel S. Johnson
+    without review by the original developers. As such, any problems introduced are my own responsibility.
 
-This file is part of DQ Robotics.
+    In accordance with the licencing arrangements for DQ Robotics itself, this file is distributed under
+    an LGPL-3.0 license.
 
-    DQ Robotics is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    As with all files in this fork, this file should be considered a work in progress. Some functions have not
+    been properly implemented yet, and these will raise exceptions if they are called. Anyone making use of
+    this file in their own projects does so at their own risk.
 
-    DQ Robotics is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    Contributors:
+    - Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
+    This class is an edited form of the DQ_SerialWholeBody class. Some functions in this file are based on similar
+    functions in a private fork of the DQ Robotics Matlab Distribution by Frederico Fernandes Afonso Silva.
 
-Contributors:
-- Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
+    The configurations provided to the DQ_FreeFloatingBase class is assumed to be of the form
+
+    q = [ base_configuration^T, leg_1_configuration^T, ... leg_n_configuration^T]^T.
+
+    How the base_configuration is formatted depends on which base is used, either DQ_FreeFloatingBase (the default) or
+    DQ_FreeFloatingBaseEuler. See the files for these classes for details on their configurations. All the legs are
+    described by DQ_SerialManipulatorDH objects.
+
+    An example of how to create a DQ_LeggedRobot object is given in the file src/robots/CorinHexapod.cpp
 */
 
 #include <dqrobotics/robot_modeling/DQ_LeggedRobot.h>
@@ -52,12 +59,26 @@ namespace DQ_robotics
         }
     }
 
-    DQ_LeggedRobot::DQ_LeggedRobot(const std::string type)
+    DQ_LeggedRobot::DQ_LeggedRobot(const std::string type, const std::string base)
     {
-        DQ_FreeFloatingBase torso;
-        dim_configuration_space_ = 6;
+
+        if (base == "quaternion")
+        {
+            DQ_FreeFloatingBase torso;
+            bodies_.push_back(std::make_shared<DQ_FreeFloatingBase>(torso));
+        }
+        else if (type == std::string("Euler"))
+        {
+            DQ_FreeFloatingBaseEuler torso;
+            bodies_.push_back(std::make_shared<DQ_FreeFloatingBaseEuler>(torso));
+        }
+        else
+        {
+            throw std::runtime_error(std::string("Invalid base: ") + type);
+        }
+
+        dim_configuration_space_ = bodies_[0]->get_dim_configuration_space();
         number_of_legs_ = 0;
-        bodies_.push_back(std::make_shared<DQ_FreeFloatingBase>(torso));
         DQ torso_offset(1);
         base_frame_offsets_.push_back(torso_offset);
 
@@ -214,11 +235,11 @@ namespace DQ_robotics
 
         int q_counter = 0;
         int current_robot_dim;
-        int skipped_dofs = 6;
+        int skipped_dofs = bodies_[0]->get_dim_configuration_space();
         VectorXd current_robot_q;
 
         // Always call the torso's fkm function
-        current_robot_q = q.segment(0, 6);
+        current_robot_q = q.segment(0, bodies_[0]->get_dim_configuration_space());
         pose = pose * bodies_[0]->fkm(current_robot_q);
 
         // If its a leg, then also handle the leg in question
@@ -259,10 +280,10 @@ namespace DQ_robotics
         MatrixXd J_pose(8, get_dim_configuration_space());
 
         // Always do the torso
-        const DQ x_0_to_iplus1 = bodies_[0]->fkm(q.segment(0, 6));
+        const DQ x_0_to_iplus1 = bodies_[0]->fkm(q.segment(0, bodies_[0]->get_dim_configuration_space()));
         const DQ x_iplus1_to_n = conj(x_0_to_iplus1) * x_0_to_n;
-        MatrixXd torso_J = haminus8(x_iplus1_to_n) * bodies_[0]->pose_jacobian(q.segment(0, 6));
-        for (int j = 0; j < 6; j++)
+        MatrixXd torso_J = haminus8(x_iplus1_to_n) * bodies_[0]->pose_jacobian(q.segment(0, bodies_[0]->get_dim_configuration_space()));
+        for (int j = 0; j < bodies_[0]->get_dim_configuration_space(); j++)
         {
             J_pose.col(j) = torso_J.col(j);
         }
@@ -281,42 +302,42 @@ namespace DQ_robotics
             // Insert the ones before
             for (int j = 0; j < blank_cols_before; j++)
             {
-                J_pose.col(6 + j) = blank_column;
+                J_pose.col(bodies_[0]->get_dim_configuration_space() + j) = blank_column;
             }
 
             int dim = bodies_[to_ith_body]->get_dim_configuration_space();
             const DQ x_0_to_iplus1 = raw_fkm_by_body(q, to_ith_body, bodies_[to_ith_body]->get_dim_configuration_space() - 1);
             const DQ x_iplus1_to_n = conj(x_0_to_iplus1) * x_0_to_n;
 
-            int skipped_dofs = 6;
+            int skipped_dofs = bodies_[0]->get_dim_configuration_space();
             for (int link_num = 1; link_num < to_ith_body; link_num++)
             {
                 skipped_dofs += bodies_[link_num]->get_dim_configuration_space();
             }
 
             const VectorXd q_iplus1 = q.segment(skipped_dofs, dim);
-            MatrixXd leg_J = hamiplus8(raw_fkm_by_body(q, 0, 5) * base_frame_offsets_[to_ith_body]) * haminus8(x_iplus1_to_n) * bodies_[to_ith_body]->pose_jacobian(q_iplus1, to_jth_dof);
+            MatrixXd leg_J = hamiplus8(raw_fkm_by_body(q, 0, bodies_[0]->get_dim_configuration_space()-1) * base_frame_offsets_[to_ith_body]) * haminus8(x_iplus1_to_n) * bodies_[to_ith_body]->pose_jacobian(q_iplus1, to_jth_dof);
             // MatrixXd leg_J = hamiplus8(raw_fkm_by_body(q, 0, 5) * base_frame_offsets_[to_ith_body]) * bodies_[to_ith_body]->pose_jacobian(q_iplus1, to_jth_dof);
 
 
             for (int j = 0; j < leg_J.cols(); j++)
             {
-                J_pose.col(6 + blank_cols_before + j) = leg_J.col(j);
+                J_pose.col(bodies_[0]->get_dim_configuration_space() + blank_cols_before + j) = leg_J.col(j);
             }
 
-            // double blank_cols_after = get_dim_configuration_space() - (6 + blank_cols_before + bodies_[to_ith_body]->get_dim_configuration_space());
-            double blank_cols_after = get_dim_configuration_space() - (6 + blank_cols_before + leg_J.cols());
+            // double blank_cols_after = get_dim_configuration_space() - (bodies_[0]->get_dim_configuration_space() + blank_cols_before + bodies_[to_ith_body]->get_dim_configuration_space());
+            double blank_cols_after = get_dim_configuration_space() - (bodies_[0]->get_dim_configuration_space() + blank_cols_before + leg_J.cols());
             for (int j = 0; j < blank_cols_after; j++)
             {
-                J_pose.col(6 + blank_cols_before + leg_J.cols() + j) = blank_column;
+                J_pose.col(bodies_[0]->get_dim_configuration_space() + blank_cols_before + leg_J.cols() + j) = blank_column;
             }
         }
         else
         {
             // if its torso only, all the rest are blank
-            for (int j = 0; j < get_dim_configuration_space() - 6; j++)
+            for (int j = 0; j < get_dim_configuration_space() - bodies_[0]->get_dim_configuration_space(); j++)
             {
-                J_pose.col(6 + j) = blank_column;
+                J_pose.col(bodies_[0]->get_dim_configuration_space() + j) = blank_column;
             }
         }
         return J_pose;

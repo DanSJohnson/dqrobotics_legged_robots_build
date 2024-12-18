@@ -1,23 +1,19 @@
 /**
-(C) Copyright 2019 DQ Robotics Developers
+    This file is not (currently) part of the official release or development branches of DQ Robotics.
+    This file incorporates elements of the official releases, but was written by Daniel S. Johnson
+    without review by the original developers. As such, any problems introduced are my own responsibility.
 
-This file is part of DQ Robotics.
+    In accordance with the licencing arrangements for DQ Robotics itself, this file is distributed under
+    an LGPL-3.0 license.
 
-    DQ Robotics is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    As with all files in this fork, this file should be considered a work in progress. Anyone making use of
+    this file in their own projects does so at their own risk.
 
-    DQ Robotics is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    Contributors:
+    - Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
-
-Contributors:
-- Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
+    This file defines a DQ_LeggedRobot object which models the Corin Hexapod, a bespoke platform designed
+    and built at the University of Manchester by Wei Cheah.
 */
 
 #ifndef DQ_ROBOTS_CORINHEXAPOD_H

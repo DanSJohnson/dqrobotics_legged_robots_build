@@ -27,9 +27,9 @@ if(APPLE)
 endif()
 
 if(WIN32)
-    ADD_DEFINITIONS(-D_USE_MATH_DEFINES) 
-    FIND_PACKAGE(Eigen3 CONFIG REQUIRED) 
-    INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR}) 
+    ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+    FIND_PACKAGE(Eigen3 CONFIG REQUIRED)
+    INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 endif()
 
 
@@ -37,7 +37,7 @@ endif()
 # DEFINE AND INSTALL LIBRARY AND INCLUDE FOLDER
 ################################################################
 
-ADD_LIBRARY(dqrobotics SHARED 
+ADD_LIBRARY(dqrobotics SHARED
     src/DQ.cpp
 
     src/internal/_dq_linesegment.cpp
@@ -55,6 +55,7 @@ ADD_LIBRARY(dqrobotics SHARED
     src/robot_modeling/DQ_MobileBase.cpp
     src/robot_modeling/DQ_HolonomicBase.cpp
     src/robot_modeling/DQ_FreeFloatingBase.cpp
+    src/robot_modeling/DQ_FreeFloatingBaseEuler.cpp
     src/robot_modeling/DQ_DifferentialDriveRobot.cpp
     src/robot_modeling/DQ_WholeBody.cpp
     src/robot_modeling/DQ_SerialWholeBody.cpp
@@ -76,13 +77,13 @@ ADD_LIBRARY(dqrobotics SHARED
     src/robots/FrankaEmikaPandaRobot.cpp
     )
 
-SET_TARGET_PROPERTIES(dqrobotics 
+SET_TARGET_PROPERTIES(dqrobotics
     PROPERTIES PUBLIC_HEADER
     include/dqrobotics/DQ.h
     )
 
-INSTALL(TARGETS dqrobotics 
-# https://stackoverflow.com/questions/21592361/cmake-install-is-not-installing-libraries-on-windows    
+INSTALL(TARGETS dqrobotics
+# https://stackoverflow.com/questions/21592361/cmake-install-is-not-installing-libraries-on-windows
 	RUNTIME DESTINATION "bin"
     LIBRARY DESTINATION "lib"
 	ARCHIVE DESTINATION "lib"
@@ -112,6 +113,7 @@ INSTALL(FILES
     include/dqrobotics/robot_modeling/DQ_MobileBase.h
     include/dqrobotics/robot_modeling/DQ_HolonomicBase.h
     include/dqrobotics/robot_modeling/DQ_FreeFloatingBase.h
+    include/dqrobotics/robot_modeling/DQ_FreeFloatingBaseEuler.h
     include/dqrobotics/robot_modeling/DQ_DifferentialDriveRobot.h
     include/dqrobotics/robot_modeling/DQ_WholeBody.h
     include/dqrobotics/robot_modeling/DQ_SerialWholeBody.h
@@ -149,7 +151,7 @@ INSTALL(FILES
 ################################################################
 
 # base folder
-INSTALL(FILES 
+INSTALL(FILES
     src/DQ.cpp
     DESTINATION "src/dqrobotics")
 
@@ -176,7 +178,7 @@ INSTALL(FILES
     DESTINATION "src/dqrobotics/robot_control")
 
 # robot_modeling folder
-INSTALL(FILES 
+INSTALL(FILES
     src/robot_modeling/DQ_SerialManipulator.cpp
     src/robot_modeling/DQ_SerialManipulatorDH.cpp
     src/robot_modeling/DQ_SerialManipulatorMDH.cpp

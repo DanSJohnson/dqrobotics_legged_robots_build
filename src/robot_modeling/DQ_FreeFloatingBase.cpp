@@ -1,29 +1,28 @@
 /**
-(C) Copyright 2019 DQ Robotics Developers
+    This file is not (currently) part of the official release or development branches of DQ Robotics.
+    This file incorporates elements of the official releases, but was written by Daniel S. Johnson
+    without review by the original developers. As such, any problems introduced are my own responsibility.
 
-This file is part of DQ Robotics.
+    In accordance with the licencing arrangements for DQ Robotics itself, this file is distributed under
+    an LGPL-3.0 license.
 
-    DQ Robotics is free software: you can redistribute it and/or modify
-    it under the terms of the GNU Lesser General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+    As with all files in this fork, this file should be considered a work in progress. Some functions have not
+    been properly implemented yet, and these will raise exceptions if they are called. Anyone making use of
+    this file in their own projects does so at their own risk.
 
-    DQ Robotics is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU Lesser General Public License for more details.
+    Contributors:
+    - Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
 
-    You should have received a copy of the GNU Lesser General Public License
-    along with DQ Robotics.  If not, see <http://www.gnu.org/licenses/>.
+    This class is an edited form of the DQ_HolonomicBase class, as that object assumes that the base is on the
+    ground at all times. This limitation makes DQ_HolonomicBase unsuitable for legged locomotion, where the
+    torso is free to move in the z-axis and can rotate about the x or y axes, hence a free floating base class
+    was required. While this class was designed with legged robots in mind, it may also be useful for UAVs and
+    aquatic ROVs.
 
-Contributors:
-- Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
-*/
-
-/*
-   This file is edited from DQ_HolonomicBase, as that object assumes that the base is on the ground at all times.
-   This is not suitable for legged locomotion, where the torso is free to move in the z-axis and can rotate about
-   the x or y axes.
+    The configurations provided to the DQ_FreeFloatingBase class can either be poses, provided as DQ objects,
+    or vectors in the form vec8(pose). A version of this class that uses Euler angles (DQ_FreeFloatingBaseEuler)
+    is also available, but its use is strongly discouraged unless you absolutely must use Euler angles, due to
+    the well known inherent mathematical issues which arise from doing so.
 */
 
 #include <dqrobotics/robot_modeling/DQ_FreeFloatingBase.h>
@@ -33,30 +32,13 @@ namespace DQ_robotics
 
     DQ_FreeFloatingBase::DQ_FreeFloatingBase()
     {
-        dim_configuration_space_ = 6; // Changed from 3 in DQ_HolonomicBase
+        dim_configuration_space_ = 8; // Changed from 3 in DQ_HolonomicBase
     }
 
-    DQ DQ_FreeFloatingBase::raw_fkm(const VectorXd &q) const // Reworked to take x,y,z coordinates and rpy euler angles.
+    DQ DQ_FreeFloatingBase::raw_fkm(const VectorXd &q) const
     {
-        const double &roll = q(0);
-        const double &pitch = q(1);
-        const double &yaw = q(2);
-        const double &x = q(3);
-        const double &y = q(4);
-        const double &z = q(5);
-
-        DQ rx, ry, rz, r, t, pose;
-        rx = cos(roll / 2) + i_ * sin(roll / 2);
-        ry = cos(pitch / 2) + j_ * sin(pitch / 2);
-        rz = cos(yaw / 2) + k_ * sin(yaw / 2);
-
-        // r= rx*ry*rz;
-        r = rz * ry * rx;
-
-        t = x * i_ + y * j_ + z * k_;
-
-        pose = r + E_ * 0.5 * t * r;
-        pose = pose.normalize();
+        // q is assumed to be the result of vec8(pose), but it could also be any other vec operation.
+        DQ pose(q);
 
         return pose;
     }
@@ -68,104 +50,31 @@ namespace DQ_robotics
 
     DQ DQ_FreeFloatingBase::fkm(const VectorXd &q, const int &to_ith_link) const
     {
-        if (to_ith_link != 5)
+        if (to_ith_link != 7)
         {
-            throw std::runtime_error(std::string("DQ_FreeFloatingBase(q,to_ith_link) only accepts to_ith_link=5"));
+            throw std::runtime_error(std::string("DQ_FreeFloatingBase(q,to_ith_link) only accepts to_ith_link=7"));
         }
         return fkm(q);
     }
 
+    DQ DQ_FreeFloatingBase::fkm(const DQ &x) const
+    {
+        return fkm(vec8(x));
+    }
+
     MatrixXd DQ_FreeFloatingBase::raw_pose_jacobian(const VectorXd &q, const int &to_link) const // Function needs reworking to reflect new situation
     {
-        if (to_link >= 6 || to_link < 0)
+        if (to_link >= 8 || to_link < 0)
         {
             throw std::runtime_error(std::string("Tried to access link index ") + std::to_string(to_link) + std::string(" which is unavailable."));
         }
 
-        if (q.size() > 6)
+        if (q.size() > 8)
         {
-            throw std::runtime_error(std::string("DQ_FreeFloatingBase::raw_pose_jacobian was provided a vector with too many values (") + std::to_string(q.size()) + std::string(", should be 6). Possibly a pose was provided instead by mistake?"));
+            throw std::runtime_error(std::string("DQ_FreeFloatingBase::raw_pose_jacobian was provided a vector with too many values (") + std::to_string(q.size()) + std::string(", should be 8)."));
         }
 
-        // Extract values from configuration velocity
-        const double &roll = q(0);
-        const double &pitch = q(1);
-        const double &yaw = q(2);
-        const double &x = q(3);
-        const double &y = q(4);
-        const double &z = q(5);
-
-        // Shorthands for sine and cosine of angles
-        const double cr = cos(roll / 2.0);
-        const double sr = sin(roll / 2.0);
-        const double cp = cos(pitch / 2.0);
-        const double sp = sin(pitch / 2.0);
-        const double cy = cos(yaw / 2.0);
-        const double sy = sin(yaw / 2.0);
-
-        // rotation DQs
-        DQ rx = cr + i_ * sr;
-        DQ ry = cp + j_ * sp;
-        DQ rz = cy + k_ * sy;
-        // DQ r=rx*ry*rz;
-        DQ r = rz * ry * rx;
-
-        // derivatives of rotation DQs by their respective euler angles
-        DQ d_rx_by_d_roll = -0.5 * sr + 0.5 * i_ * cr;
-        DQ d_ry_by_d_pitch = -0.5 * sp + 0.5 * j_ * cp;
-        DQ d_rz_by_d_yaw = -0.5 * sy + 0.5 * k_ * cy;
-
-        // derivatives of primary part of the pose by each euler angle
-        // DQ d_r_by_d_roll=d_rx_by_d_roll*ry*rz;
-        // DQ d_r_by_d_pitch=rx*d_ry_by_d_pitch*rz;
-        // DQ d_r_by_d_yaw=rx*ry*d_rz_by_d_yaw;
-        DQ d_r_by_d_roll = rz * ry * d_rx_by_d_roll;
-        DQ d_r_by_d_pitch = rz * d_ry_by_d_pitch * rx;
-        DQ d_r_by_d_yaw = d_rz_by_d_yaw * ry * rx;
-
-        // vector forms of the above
-        Eigen::VectorXd vec_d_r_by_d_roll = vec4(d_r_by_d_roll);
-        Eigen::VectorXd vec_d_r_by_d_pitch = vec4(d_r_by_d_pitch);
-        Eigen::VectorXd vec_d_r_by_d_yaw = vec4(d_r_by_d_yaw);
-
-        // derivatives of the position DQ t by each coordinate
-        DQ t = x * i_ + y * j_ + z * k_;
-        DQ d_t_by_d_x = i_;
-        DQ d_t_by_d_y = j_;
-        DQ d_t_by_d_z = k_;
-
-        // derivatives of the dual part of the pose by each coordinate
-        DQ d_dual_by_d_x = 0.5 * d_t_by_d_x * r;
-        DQ d_dual_by_d_y = 0.5 * d_t_by_d_y * r;
-        DQ d_dual_by_d_z = 0.5 * d_t_by_d_z * r;
-
-        // vector forms of the above
-        Eigen::VectorXd vec_d_dual_by_d_x = vec4(d_dual_by_d_x);
-        Eigen::VectorXd vec_d_dual_by_d_y = vec4(d_dual_by_d_y);
-        Eigen::VectorXd vec_d_dual_by_d_z = vec4(d_dual_by_d_z);
-
-        // derivatives of the dual part of the pose by each euler angle
-        DQ d_dual_by_d_roll = 0.5 * t * d_r_by_d_roll;
-        DQ d_dual_by_d_pitch = 0.5 * t * d_r_by_d_pitch;
-        DQ d_dual_by_d_yaw = 0.5 * t * d_r_by_d_yaw;
-
-        // vector forms of the above
-        Eigen::VectorXd vec_d_dual_by_d_roll = vec4(d_dual_by_d_roll);
-        Eigen::VectorXd vec_d_dual_by_d_pitch = vec4(d_dual_by_d_pitch);
-        Eigen::VectorXd vec_d_dual_by_d_yaw = vec4(d_dual_by_d_yaw);
-
-        // Combine all the above into the Jacobian
-        MatrixXd J(8, 6);
-        J << vec_d_r_by_d_roll(0), vec_d_r_by_d_pitch(0), vec_d_r_by_d_yaw(0), 0, 0, 0,
-            vec_d_r_by_d_roll(1), vec_d_r_by_d_pitch(1), vec_d_r_by_d_yaw(1), 0, 0, 0,
-            vec_d_r_by_d_roll(2), vec_d_r_by_d_pitch(2), vec_d_r_by_d_yaw(2), 0, 0, 0,
-            vec_d_r_by_d_roll(3), vec_d_r_by_d_pitch(3), vec_d_r_by_d_yaw(3), 0, 0, 0,
-            vec_d_dual_by_d_roll(0), vec_d_dual_by_d_pitch(0), vec_d_dual_by_d_yaw(0), vec_d_dual_by_d_x(0), vec_d_dual_by_d_y(0), vec_d_dual_by_d_z(0),
-            vec_d_dual_by_d_roll(1), vec_d_dual_by_d_pitch(1), vec_d_dual_by_d_yaw(1), vec_d_dual_by_d_x(1), vec_d_dual_by_d_y(1), vec_d_dual_by_d_z(1),
-            vec_d_dual_by_d_roll(2), vec_d_dual_by_d_pitch(2), vec_d_dual_by_d_yaw(2), vec_d_dual_by_d_x(2), vec_d_dual_by_d_y(2), vec_d_dual_by_d_z(2),
-            vec_d_dual_by_d_roll(3), vec_d_dual_by_d_pitch(3), vec_d_dual_by_d_yaw(3), vec_d_dual_by_d_x(3), vec_d_dual_by_d_y(3), vec_d_dual_by_d_z(3);
-
-        return J.block(0, 0, 8, to_link + 1);
+        return MatrixXd::Identity(8,8);
     }
 
     MatrixXd DQ_FreeFloatingBase::pose_jacobian(const VectorXd &q, const int &to_link) const
@@ -176,6 +85,11 @@ namespace DQ_robotics
     MatrixXd DQ_FreeFloatingBase::pose_jacobian(const VectorXd &q) const
     {
         return pose_jacobian(q, get_dim_configuration_space() - 1);
+    }
+
+    MatrixXd DQ_FreeFloatingBase::pose_jacobian(const DQ &x) const
+    {
+        return pose_jacobian(vec8(x));
     }
 
     // TODO: Docs need reworking to reflect new situation
