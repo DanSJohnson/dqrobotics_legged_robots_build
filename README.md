@@ -13,7 +13,7 @@ A lot of very powerful functionality is already present in DQ Robotics and for i
 
 There are three new classes in this fork to enable the modelling of new kinds of robots. These are:
 - DQ_FreeFloatingBase - A class to represent free floating robot bases such as those of legged robots.
-- DQ_FreeFloatingBaseEuler - A version of DQ_FreeFloatingBase which uses Euler angles for its configuration vectors instead of quaternions. In general, users would be advised to stick with DQ_FreeFloatingBase due to the well-known drawback of Euler angle representations. However, this class is also made available for the very rare cases where you absolutely cannot get out of using Euler angles (e.g., some other element of your stack uses them for some reason).
+- DQ_FreeFloatingBaseEuler - A version of DQ_FreeFloatingBase which uses Euler angles for its configuration vectors instead of quaternions. In general, users would be advised to stick with DQ_FreeFloatingBase due to the well-known drawbacks of Euler angle representations. However, this class is also made available for the very rare cases where you absolutely cannot get out of using Euler angles (e.g., some other element of your stack uses them for some reason).
 - DQ_LeggedRobot - A class for representing legged robots. Every legged robot is comprised of a base (either DQ_FreeFloatingBase or DQ_FreeFloatingBaseEuler) and some legs (represented as DQ_SerialManipulatorDH objects).
 
 Additionally, the Corin Hexapod is also available as an example alongside those robots provided by the original DQ Robotics distribution. New users should see `src/robots/CorinHexapod.cpp` for an example of how the DQ_LeggedRobot constructor may be used to define your own legged robots. The original Corin Hexapod was developed by Wei Cheah for the University of Manchester, more information on Corin can be found [here](https://uomrobotics.com/collaborations/rain/remote-inspection/corin.html).
@@ -21,5 +21,5 @@ Additionally, the Corin Hexapod is also available as an example alongside those 
 ## To Do
 
 Because this fork is still under development, some functionality is not yet implemented. Functionality which is planned to be implemented, but which has not been yet, includes:
-- Functions for the pose Jacobian derivative in DQ_FreeFloatingBase and DQ_LeggedRobot.
-- Ensuring that the controllers shipped with DQ_Robotics can be used with DQ_LeggedRobot objects.
+- Functions for the pose Jacobian derivative in DQ_FreeFloatingBase and DQ_LeggedRobot (currently calls to these functions will result in an exception being raised).
+- Ensuring that the controllers shipped with DQ_Robotics can be used with DQ_LeggedRobot objects (at time of writing this has not been tested).
