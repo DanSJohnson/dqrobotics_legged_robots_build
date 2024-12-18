@@ -6,8 +6,9 @@
     In accordance with the licencing arrangements for DQ Robotics itself, this file is distributed under
     an LGPL-3.0 license.
 
-    As with all files in this fork, this file should be considered a work in progress. Anyone making use
-    of this file in their own projects does so at their own risk.
+    As with all files in this fork, this file should be considered a work in progress. Some functions have not
+    been properly implemented yet, and these will raise exceptions if they are called. Anyone making use of
+    this file in their own projects does so at their own risk.
 
     Contributors:
     - Daniel S. Johnson (daniel.johnson-2@manchester.ac.uk)
@@ -17,6 +18,15 @@
     torso is free to move in the z-axis and can rotate about the x or y axes, hence a free floating base class
     was required. While this class was designed with legged robots in mind, it may also be useful for UAVs and
     aquatic ROVs.
+
+    The configurations provided to the DQ_FreeFloatingBase are assumed to be of the form
+
+        q = [ vec4(r)^T, vec3(t)^T ]^T,
+
+    where r and t describe the orientation and translation of the base respectively. A version of this class
+    that uses Euler angles (DQ_FreeFloatingBaseEuler) is also available, but its use is strongly discouraged
+    unless you absolutely must use Euler angles, due to the well known inherent mathematical issues which
+    arise from doing so.
 */
 
 #ifndef DQ_ROBOTICS_ROBOT_MODELING_DQ_FREEFLOATINGBASE
@@ -48,10 +58,6 @@ public:
     MatrixXd raw_pose_jacobian(const VectorXd& q, const int& to_link=2) const;
     MatrixXd raw_pose_jacobian_derivative(const VectorXd& q,
                                           const VectorXd& q_dot, const int& to_link = 2) const;
-
-    // New concrete methods specific to this class
-    DQ fkm(const DQ& x) const;
-    MatrixXd pose_jacobian(const DQ& x) const;
 };
 
 }

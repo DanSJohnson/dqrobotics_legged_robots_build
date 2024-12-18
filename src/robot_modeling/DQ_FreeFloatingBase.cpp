@@ -19,10 +19,14 @@
     was required. While this class was designed with legged robots in mind, it may also be useful for UAVs and
     aquatic ROVs.
 
-    The configurations provided to the DQ_FreeFloatingBase class can either be poses, provided as DQ objects,
-    or vectors in the form vec8(pose). A version of this class that uses Euler angles (DQ_FreeFloatingBaseEuler)
-    is also available, but its use is strongly discouraged unless you absolutely must use Euler angles, due to
-    the well known inherent mathematical issues which arise from doing so.
+    The configurations provided to the DQ_FreeFloatingBase are assumed to be of the form
+
+        q = [ vec4(r)^T, vec3(t)^T ]^T,
+
+    where r and t describe the orientation and translation of the base respectively. A version of this class
+    that uses Euler angles (DQ_FreeFloatingBaseEuler) is also available, but its use is strongly discouraged
+    unless you absolutely must use Euler angles, due to the well known inherent mathematical issues which
+    arise from doing so.
 */
 
 #include <dqrobotics/robot_modeling/DQ_FreeFloatingBase.h>
@@ -32,13 +36,16 @@ namespace DQ_robotics
 
     DQ_FreeFloatingBase::DQ_FreeFloatingBase()
     {
-        dim_configuration_space_ = 8; // Changed from 3 in DQ_HolonomicBase
+        dim_configuration_space_ = 7; // Changed from 3 in DQ_HolonomicBase
     }
 
     DQ DQ_FreeFloatingBase::raw_fkm(const VectorXd &q) const
     {
-        // q is assumed to be the result of vec8(pose), but it could also be any other vec operation.
-        DQ pose(q);
+        // q is assumed to be structured as [ vec4(r)^T, vec3(t)^T ]^T
+        DQ r(q.segment(0,4)),
+           t(q.segment(4,3));
+
+        DQ pose = r + E_*0.5*r*t;
 
         return pose;
     }
@@ -50,31 +57,49 @@ namespace DQ_robotics
 
     DQ DQ_FreeFloatingBase::fkm(const VectorXd &q, const int &to_ith_link) const
     {
-        if (to_ith_link != 7)
+        if (to_ith_link != 6)
         {
-            throw std::runtime_error(std::string("DQ_FreeFloatingBase(q,to_ith_link) only accepts to_ith_link=7"));
+            throw std::runtime_error(std::string("DQ_FreeFloatingBase(q,to_ith_link) only accepts to_ith_link=6"));
         }
         return fkm(q);
     }
 
-    DQ DQ_FreeFloatingBase::fkm(const DQ &x) const
-    {
-        return fkm(vec8(x));
-    }
-
     MatrixXd DQ_FreeFloatingBase::raw_pose_jacobian(const VectorXd &q, const int &to_link) const // Function needs reworking to reflect new situation
     {
-        if (to_link >= 8 || to_link < 0)
+        if (to_link >= 7 || to_link < 0)
         {
             throw std::runtime_error(std::string("Tried to access link index ") + std::to_string(to_link) + std::string(" which is unavailable."));
         }
 
-        if (q.size() > 8)
+        if (q.size() > 7)
         {
-            throw std::runtime_error(std::string("DQ_FreeFloatingBase::raw_pose_jacobian was provided a vector with too many values (") + std::to_string(q.size()) + std::string(", should be 8)."));
+            throw std::runtime_error(std::string("DQ_FreeFloatingBase::raw_pose_jacobian was provided a vector with too many values (") + std::to_string(q.size()) + std::string(", should be 7)."));
         }
 
-        return MatrixXd::Identity(8,8);
+        DQ r(q.segment(0,4)),
+           t(q.segment(4,3));
+
+        VectorXd dual_by_r1 = vec4(0.5 * t);
+        VectorXd dual_by_r2 = vec4(0.5 * i_ * t);
+        VectorXd dual_by_r3 = vec4(0.5 * j_ * t);
+        VectorXd dual_by_r4 = vec4(0.5 * k_ * t);
+
+        VectorXd dual_by_t2 = vec4(0.5 * r * i_);
+        VectorXd dual_by_t3 = vec4(0.5 * r * j_);
+        VectorXd dual_by_t4 = vec4(0.5 * r * k_);
+
+        MatrixXd pose_jacobian(8,7);
+
+        pose_jacobian <<1, 0, 0, 0, 0, 0, 0,
+                        0, 1, 0, 0, 0, 0, 0,
+                        0, 0, 1, 0, 0, 0, 0,
+                        0, 0, 0, 1, 0, 0, 0,
+                        dual_by_r1(0), dual_by_r2(0), dual_by_r3(0), dual_by_r4(0), dual_by_t2(0), dual_by_t3(0), dual_by_t4(0),
+                        dual_by_r1(1), dual_by_r2(1), dual_by_r3(1), dual_by_r4(1), dual_by_t2(1), dual_by_t3(1), dual_by_t4(1),
+                        dual_by_r1(2), dual_by_r2(2), dual_by_r3(2), dual_by_r4(2), dual_by_t2(2), dual_by_t3(2), dual_by_t4(2),
+                        dual_by_r1(3); dual_by_r2(3), dual_by_r3(3), dual_by_r4(3), dual_by_t2(3), dual_by_t3(3), dual_by_t4(3);
+
+        return pose_jacobian;
     }
 
     MatrixXd DQ_FreeFloatingBase::pose_jacobian(const VectorXd &q, const int &to_link) const
@@ -85,11 +110,6 @@ namespace DQ_robotics
     MatrixXd DQ_FreeFloatingBase::pose_jacobian(const VectorXd &q) const
     {
         return pose_jacobian(q, get_dim_configuration_space() - 1);
-    }
-
-    MatrixXd DQ_FreeFloatingBase::pose_jacobian(const DQ &x) const
-    {
-        return pose_jacobian(vec8(x));
     }
 
     // TODO: Docs need reworking to reflect new situation
