@@ -97,7 +97,7 @@ namespace DQ_robotics
                         dual_by_r1(0), dual_by_r2(0), dual_by_r3(0), dual_by_r4(0), dual_by_t2(0), dual_by_t3(0), dual_by_t4(0),
                         dual_by_r1(1), dual_by_r2(1), dual_by_r3(1), dual_by_r4(1), dual_by_t2(1), dual_by_t3(1), dual_by_t4(1),
                         dual_by_r1(2), dual_by_r2(2), dual_by_r3(2), dual_by_r4(2), dual_by_t2(2), dual_by_t3(2), dual_by_t4(2),
-                        dual_by_r1(3); dual_by_r2(3), dual_by_r3(3), dual_by_r4(3), dual_by_t2(3), dual_by_t3(3), dual_by_t4(3);
+                        dual_by_r1(3), dual_by_r2(3), dual_by_r3(3), dual_by_r4(3), dual_by_t2(3), dual_by_t3(3), dual_by_t4(3);
 
         return pose_jacobian;
     }
