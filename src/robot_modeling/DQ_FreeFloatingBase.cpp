@@ -80,13 +80,13 @@ namespace DQ_robotics
            t(q.segment(4,3));
 
         VectorXd dual_by_r1 = vec4(0.5 * t);
-        VectorXd dual_by_r2 = vec4(0.5 * i_ * t);
-        VectorXd dual_by_r3 = vec4(0.5 * j_ * t);
-        VectorXd dual_by_r4 = vec4(0.5 * k_ * t);
+        VectorXd dual_by_r2 = vec4(0.5 * t * i_);
+        VectorXd dual_by_r3 = vec4(0.5 * t * j_);
+        VectorXd dual_by_r4 = vec4(0.5 * t * k_);
 
-        VectorXd dual_by_t2 = vec4(0.5 * r * i_);
-        VectorXd dual_by_t3 = vec4(0.5 * r * j_);
-        VectorXd dual_by_t4 = vec4(0.5 * r * k_);
+        VectorXd dual_by_t2 = vec4(0.5 * i_ * r);
+        VectorXd dual_by_t3 = vec4(0.5 * j_ * r);
+        VectorXd dual_by_t4 = vec4(0.5 * k_ * r);
 
         MatrixXd pose_jacobian(8,7);
 
