@@ -45,7 +45,7 @@ namespace DQ_robotics
         DQ r(q.segment(0,4)),
            t(q.segment(4,3));
 
-        DQ pose = r + E_*0.5*r*t;
+        DQ pose = r + E_*0.5*t*r;
 
         return pose;
     }
